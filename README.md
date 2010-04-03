@@ -12,6 +12,7 @@ iteratively.
  1. Find and fix the TODO markers in `lib/rdf/myrepository.rb`.   
  1. Find and fix the TODO markers in `spec/my_repository.spec`.  You may not need to do this if your repository needs no arguments to `new()`.
  1. Run the tests!  Man, you're awesome!
+ 1. Iterate and improve!  If your backend is better served by replacing some of the many methods that an `RDF::Repository` implments, replace them.
 
 To run tests, run:
 
@@ -25,8 +26,9 @@ You'll need the `rdf`, `rdf-spec`, and `rspec` libraries.  The easiest way to in
 
 ## Resources
 
- * <http://rdf.rubyforge.org>
-
+ * <http://rdf.rubyforge.org> - RDF.rb's home page
+ * A forthcoming blog post - Coming soon.
+ * <http://rdf.rubyforge.org/RDF/Repository.html> - RDF.rb's Repository documentation; check here for methods you can replace.
 
 ### Author
  * Ben Lavender | <blavender@gmail.com> | <http://github.com/bhuga> | <http://bhuga.net> | <http://blog.datagraph.org>
