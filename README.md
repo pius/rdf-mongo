@@ -5,7 +5,7 @@ designed to get you up and running with a new backend as quickly as possible,
 so that you can have working tests right away, allowing you to develop
 iteratively.
 
-See <http://blog.datagraph.org/2010/04/rdf-sql-howto> for an overview.
+See <http://blog.datagraph.org/2010/04/rdf-repository-howto> for an overview.
 
 # Getting started:
 
@@ -29,7 +29,7 @@ You'll need the `rdf`, `rdf-spec`, and `rspec` libraries.  The easiest way to in
 ## Resources
 
  * <http://rdf.rubyforge.org> - RDF.rb's home page
- * <http://blog.datagraph.org/2010/04/rdf-sql-howto> - A blog post how-to on RDF.rb repositories
+ * <http://blog.datagraph.org/2010/04/rdf-repository-howto> - A blog post how-to on RDF.rb repositories
  * <http://rdf.rubyforge.org/RDF/Repository.html> - RDF.rb's Repository documentation; check here for methods you can replace.
 
 
