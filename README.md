@@ -5,6 +5,8 @@ designed to get you up and running with a new backend as quickly as possible,
 so that you can have working tests right away, allowing you to develop
 iteratively.
 
+See <http://blog.datagraph.org/2010/04/rdf-sql-howto> for an overview.
+
 # Getting started:
 
  1. Ensure you have the requirements below.
@@ -27,8 +29,13 @@ You'll need the `rdf`, `rdf-spec`, and `rspec` libraries.  The easiest way to in
 ## Resources
 
  * <http://rdf.rubyforge.org> - RDF.rb's home page
- * A forthcoming blog post - Coming soon.
+ * <http://blog.datagraph.org/2010/04/rdf-sql-howto> - A blog post how-to on RDF.rb repositories
  * <http://rdf.rubyforge.org/RDF/Repository.html> - RDF.rb's Repository documentation; check here for methods you can replace.
+
+
+### Support
+
+Please post questions or feedback to the [W3C-ruby-rdf mailing list][].
 
 ### Author
  * Ben Lavender | <blavender@gmail.com> | <http://github.com/bhuga> | <http://bhuga.net> | <http://blog.datagraph.org>
@@ -41,3 +48,5 @@ more information, see the accompanying UNLICENSE file.
 If you're unfamiliar with public domain, that means it's perfectly fine to
 start with this skeleton and code away, later relicensing as you see fit.
 
+
+[W3C-ruby-rdf mailing list]:        http://lists.w3.org/Archives/Public/public-rdf-ruby/
