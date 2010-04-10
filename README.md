@@ -22,7 +22,7 @@ Please post questions or feedback to the [W3C-ruby-rdf mailing list][].
  * Pius Uzamere | <pius@alum.mit.edu> | <http://github.com/pius> | <http://pius.me>
  * Ben Lavender (author of the adapter skeleton) | <blavender@gmail.com> | <http://github.com/bhuga> | <http://bhuga.net> | <http://blog.datagraph.org>
 
-### 'License'
+### License
 
 MIT License
 
