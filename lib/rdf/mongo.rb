@@ -6,8 +6,8 @@ module RDF
   module Mongo
     class Repository < ::RDF::Repository
 
-    def initialize(options = {:host => 'localhost', :port => 27017})
-      @db = Mongo::Connection.new(options[:host], options[:port]).db(options[:db])
+    def initialize(options = {:host => 'localhost', :port => 27017, :db => 'quadb'})
+      @db = ::Mongo::Connection.new(options[:host], options[:port]).db(options[:db])
       @coll = @db['quads']
     end
  
