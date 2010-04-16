@@ -12,7 +12,7 @@ describe RDF::Mongo::Repository do
    
     after :each do
       #TODO: Anything you need to clean up a test goes here.
-      @repository.clear
+      @repository.coll.drop#('quads')
     end
 
     # @see lib/rdf/spec/repository.rb in RDF-spec

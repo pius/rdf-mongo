@@ -67,7 +67,7 @@ module RDF
       #what other object types besides URIs and Literals do I need to handle?  BNodes, maybe?
       
       def self.to_mongo(value, value_type = :u)
-        to_s
+        value.to_s
       end
 
       def self.from_mongo(value, value_type = :u)
@@ -82,6 +82,14 @@ module RDF
     
     
     class Repository < ::RDF::Repository
+      
+      def db
+        @db
+      end
+      
+      def coll
+        @coll
+      end
 
     def initialize(options = {:host => 'localhost', :port => 27017, :db => 'quadb'})
       @db = ::Mongo::Connection.new(options[:host], options[:port]).db(options[:db])
@@ -94,19 +102,21 @@ module RDF
         statements = @coll.find()
         statements.each {|statement|
           block.call(RDF::Statement.new(
-                :subject   => statement[:s],
-                :predicate => statement[:p],
-                :object    => statement[:o],
-                :context   => statement[:c]))
+                :subject   => RDF::Mongo::Conversion.from_mongo(statement[:s], statement[:st]),
+                :predicate => RDF::Mongo::Conversion.from_mongo(statement[:p], statement[:pt]),
+                :object    => RDF::Mongo::Conversion.from_mongo(statement[:o], statement[:ot]),
+                :context   => RDF::Mongo::Conversion.from_mongo(statement[:c], statement[:ct])))
               }
       else
-        ::Enumerable::Enumerator.new(self,:each)
+        #::Enumerable::Enumerator.new(self,:each)
+        statements = @coll.find()
+        statements.send(:each)
       end
     end
 
     # @see RDF::Mutable#insert_statement
     def insert_statement(statement)
-      @coll.update(statement.to_mongo, statement.to_mongo)
+      @coll.update(statement.to_mongo, statement.to_mongo, :upsert => true)
     end
 
     # @see RDF::Mutable#delete_statement
