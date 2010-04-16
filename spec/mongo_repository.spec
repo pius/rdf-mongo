@@ -3,6 +3,7 @@ $:.unshift File.dirname(__FILE__) + "/../lib/"
 require 'rdf'
 require 'rdf/spec/repository'
 require 'rdf/mongo'
+require 'enumerator'
 
 describe RDF::Mongo::Repository do
   context "Mongo RDF Repository" do
