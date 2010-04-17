@@ -2,14 +2,25 @@ require 'rdf'
 require 'enumerator'
 require 'mongo'
 
-
+module Mongo
+  class Cursor
+    def rdf_each(&block)
+      if block_given?
+        each {|statement| block.call(RDF::Statement.from_mongo(statement)) }
+      else
+        self#each {|statement| RDF::Statement.from_mongo(statement) }
+      end
+    end
+  end
+end
+      
 module RDF
   class Statement
     def to_mongo
       self.to_hash.inject({}) {|hash, (place_in_statement, entity)| hash.merge(RDF::Mongo::Conversion.to_mongo(entity, place_in_statement)) }
     end
     
-    def from_mongo(statement)
+    def self.from_mongo(statement)
       RDF::Statement.new(
         :subject   => RDF::Mongo::Conversion.from_mongo(statement[:s], statement[:st]),
         :predicate => RDF::Mongo::Conversion.from_mongo(statement[:p], statement[:pt]),
@@ -75,17 +86,11 @@ module RDF
       def each(&block)
         if block_given?
           statements = @coll.find()
-          statements.each {|statement|
-            block.call(RDF::Statement.new(
-                  :subject   => RDF::Mongo::Conversion.from_mongo(statement[:s], statement[:st]),
-                  :predicate => RDF::Mongo::Conversion.from_mongo(statement[:p], statement[:pt]),
-                  :object    => RDF::Mongo::Conversion.from_mongo(statement[:o], statement[:ot]),
-                  :context   => RDF::Mongo::Conversion.from_mongo(statement[:c], statement[:ct])))
-                }
+          statements.each {|statement| block.call(RDF::Statement.from_mongo(statement)) }
         else
-          #::Enumerable::Enumerator.new(self,:each)
           statements = @coll.find()
-          statements.send(:each)
+          enumerator!.new(statements,:rdf_each)
+          #nasty ... in Ruby 1.9, Enumerator doesn't exist under Enumerable
         end
       end
 
@@ -113,7 +118,7 @@ module RDF
             statements = query_hash(pattern)
             case block_given?
               when true
-                statements.each(&block)
+                statements.each {|s| block.call(RDF::Statement.from_mongo(s))}
               else
                 statements.extend(RDF::Enumerable, RDF::Queryable)
             end
@@ -130,6 +135,16 @@ module RDF
         (h[:c] = hash[:context]) if hash[:context]
         @coll.find(h)
       end
+      
+      
+      private
+
+        def enumerator! # @private
+          require 'enumerator' unless defined?(::Enumerable)
+          @@enumerator_klass = defined?(::Enumerable::Enumerator) ? ::Enumerable::Enumerator : ::Enumerator
+        end
+      
+      
     end
   end
 end
