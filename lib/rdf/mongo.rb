@@ -22,10 +22,10 @@ module RDF
     
     def self.from_mongo(statement)
       RDF::Statement.new(
-        :subject   => RDF::Mongo::Conversion.from_mongo(statement[:s], statement[:st]),
-        :predicate => RDF::Mongo::Conversion.from_mongo(statement[:p], statement[:pt]),
-        :object    => RDF::Mongo::Conversion.from_mongo(statement[:o], statement[:ot]),
-        :context   => RDF::Mongo::Conversion.from_mongo(statement[:c], statement[:ct]))
+        :subject   => RDF::Mongo::Conversion.from_mongo(statement['s'], statement['st']),
+        :predicate => RDF::Mongo::Conversion.from_mongo(statement['p'], statement['pt']),
+        :object    => RDF::Mongo::Conversion.from_mongo(statement['o'], statement['ot']),
+        :context   => RDF::Mongo::Conversion.from_mongo(statement['c'], statement['ct']))
     end
   end
   
