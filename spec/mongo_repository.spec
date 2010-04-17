@@ -9,6 +9,7 @@ describe RDF::Mongo::Repository do
   context "Mongo RDF Repository" do
     before :each do
       @repository = RDF::Mongo::Repository.new() # TODO: Do you need constructor arguments?
+      @repository.coll.drop
     end
    
     after :each do

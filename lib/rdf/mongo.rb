@@ -22,10 +22,10 @@ module RDF
     
     def self.from_mongo(statement)
       RDF::Statement.new(
-        :subject   => RDF::Mongo::Conversion.from_mongo(statement['s'], statement['st']),
-        :predicate => RDF::Mongo::Conversion.from_mongo(statement['p'], statement['pt']),
-        :object    => RDF::Mongo::Conversion.from_mongo(statement['o'], statement['ot']),
-        :context   => RDF::Mongo::Conversion.from_mongo(statement['c'], statement['ct']))
+        :subject   => RDF::Mongo::Conversion.from_mongo(statement['s'], statement['st'], statement['sl']),
+        :predicate => RDF::Mongo::Conversion.from_mongo(statement['p'], statement['pt'], statement['pl']),
+        :object    => RDF::Mongo::Conversion.from_mongo(statement['o'], statement['ot'], statement['ol']),
+        :context   => RDF::Mongo::Conversion.from_mongo(statement['c'], statement['ct'], statement['cl']))
     end
   end
   
@@ -38,7 +38,7 @@ module RDF
         when RDF::URI
           v, k = value.to_s, :u
         when RDF::Literal
-          v, k = value.value, :l
+          v, k, ll = value.value, :l, value.language
         when nil
           v, k = nil, nil
         else
@@ -47,24 +47,24 @@ module RDF
         
         case place_in_statement
         when :subject
-          t, k1 = :st, :s
+          t, k1, lt = :st, :s, :sl
         when :predicate
-          t, k1 = :pt, :p
+          t, k1, lt = :pt, :p, :pl
         when :object
-          t, k1 = :ot, :o
+          t, k1, lt = :ot, :o, :ol
         when :context
-          t, k1 = :ct, :c
+          t, k1, lt = :ct, :c, :cl
         end
-        h = {k1 => (v == '' ? nil : v), t => (k == '' ? nil : k)}
+        h = {k1 => (v == '' ? nil : v), t => (k == '' ? nil : k), lt => ll}
         h.delete_if {|k,v| h[k].nil?}
       end
 
-      def self.from_mongo(value, value_type = :u)
+      def self.from_mongo(value, value_type = :u, lang = nil)
         case value_type
         when :u
           RDF::URI.new(value)
         when :l
-          RDF::Literal.new(value)
+          RDF::Literal.new(value, :language => lang)
         end
       end
     end
