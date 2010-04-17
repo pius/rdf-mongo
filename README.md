@@ -16,7 +16,10 @@ You'll need the 'mongo', 'rdf', 'rdf-spec', and 'rspec' libraries.  The easiest 
 
 ## Ruby 1.9 Compatibility
 
-Please note that you'll want to use my forks of rdf and rdf-spec for Ruby 1.9 compatibility until my patches are pushed into the mainline.
+Please note that you'll need to use my forks of rdf and rdf-spec for Ruby 1.9 compatibility until my patches are pushed into the mainline (which'll hopefully happen within a few days).  To use them, uninstall the legacy rdf and rdf-spec gems and install the compatibility gems:
+
+$ sudo gem install rdf-ruby19 rdf-spec-ruby19
+
 
 ### Support
 
