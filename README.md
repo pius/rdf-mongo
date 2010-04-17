@@ -4,9 +4,11 @@ This is an RDF.rb storage adapter for MongoDB.
 
 See <http://blog.datagraph.org/2010/04/rdf-repository-howto> for an overview.
 
-## Version
+## Versioning and backwards compatibility.
 
-1.0.  All rdf-specs are passing.
+Moving forward, the versioning will reflect the RDF.rb version number for which all rdf-specs are passing.
+
+It should also be noted that prior to 1.0, there are no guarantees of backwards compatibility for data stored using previous versions of the gem.  This is to make optimizing the schema for MongoDB easy.
 
 ## Requirements
 
@@ -18,7 +20,7 @@ You'll need the 'mongo', 'rdf', 'rdf-spec', and 'rspec' libraries.  The easiest 
 
 Please note that you'll need to use my forks of rdf and rdf-spec for Ruby 1.9 compatibility until my patches are pushed into the mainline (which'll hopefully happen within a few days).  To use them, uninstall the legacy rdf and rdf-spec gems and install the compatibility gems:
 
-$ sudo gem install rdf-ruby19 rdf-spec-ruby19
+    $ sudo gem install rdf-ruby19 rdf-spec-ruby19
 
 
 ### Support
