@@ -39,6 +39,8 @@ module RDF
           v, k = value.to_s, :u
         when RDF::Literal
           v, k = value.value, :l
+        when nil
+          v, k = nil, nil
         else
           v, k = value.to_s, :u
         end
@@ -53,7 +55,8 @@ module RDF
         when :context
           t, k1 = :ct, :c
         end
-        return {k1 => v, t => k}
+        h = {k1 => (v == '' ? nil : v), t => (k == '' ? nil : k)}
+        h.delete_if {|k,v| h[k].nil?}
       end
 
       def self.from_mongo(value, value_type = :u)
@@ -123,7 +126,7 @@ module RDF
                 the_statements.each {|s| block.call(RDF::Statement.from_mongo(s))}
               else
                 #e = enumerator!.new(statements.extend(RDF::Queryable),:rdf_each)
-                s = the_statements.extend(RDF::Enumerable, RDF::Queryable)
+                #s = the_statements.extend(RDF::Enumerable, RDF::Queryable)
                 def the_statements.each(&block)
                   if block_given?
                     super {|statement| block.call(RDF::Statement.from_mongo(statement)) }
@@ -131,7 +134,11 @@ module RDF
                     enumerator!.new(the_statements,:rdf_each)
                   end
                 end
-                s
+                
+                def the_statements.size
+                  count
+                end
+                s = the_statements
             end
           else
             super(pattern) 
@@ -139,12 +146,14 @@ module RDF
       end
     
       def query_hash(hash)
-        h = {}
-        (h[:s] = hash[:subject]) if hash[:subject]
-        (h[:p] = hash[:predicate]) if hash[:predicate]
-        (h[:o] = hash[:object]) if hash[:object]
-        (h[:c] = hash[:context]) if hash[:context]
-        @coll.find(h) || []
+        return @coll.find if hash.empty?
+        h = RDF::Statement.new(hash).to_mongo
+        # h = {}
+        # (h[:s] = hash[:subject]) if hash[:subject]
+        # (h[:p] = hash[:predicate]) if hash[:predicate]
+        # (h[:o] = hash[:object]) if hash[:object]
+        # (h[:c] = hash[:context]) if hash[:context]
+        @coll.find(h)
       end
       
       
