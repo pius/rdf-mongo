@@ -17,7 +17,9 @@ end
 module RDF
   class Statement
     def to_mongo
-      self.to_hash.inject({}) {|hash, (place_in_statement, entity)| hash.merge(RDF::Mongo::Conversion.to_mongo(entity, place_in_statement)) }
+      self.to_hash.merge({:context => self.context}).inject({}) { |hash, (place_in_statement, entity)| 
+        hash.merge(RDF::Mongo::Conversion.to_mongo(entity, place_in_statement)) 
+        }
     end
     
     def self.from_mongo(statement)
@@ -31,7 +33,7 @@ module RDF
   
   module Mongo    
     class Conversion
-      #what other object types besides URIs and Literals do I need to handle?  BNodes, maybe?
+      #TODO: Add support for other types of entities
       
       def self.to_mongo(value, place_in_statement)
         case value

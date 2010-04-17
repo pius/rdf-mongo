@@ -13,9 +13,7 @@ describe RDF::Mongo::Repository do
     end
    
     after :each do
-      #TODO: Anything you need to clean up a test goes here.
       @repository.coll.drop
-      raise 'whaa?' unless @repository.empty?
     end
 
     # @see lib/rdf/spec/repository.rb in RDF-spec
