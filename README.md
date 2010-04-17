@@ -14,6 +14,10 @@ You'll need the 'mongo', 'rdf', 'rdf-spec', and 'rspec' libraries.  The easiest 
 
     $ sudo gem install mongo rdf rdf-spec rspec rdf-mongo
 
+## Ruby 1.9 Compatibility
+
+Please note that you'll want to use my forks of rdf and rdf-spec for Ruby 1.9 compatibility until my patches are pushed into the mainline.
+
 ### Support
 
 Please post questions or feedback to the [W3C-ruby-rdf mailing list][].
