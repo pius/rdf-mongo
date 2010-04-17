@@ -4,7 +4,7 @@ This is an RDF.rb storage adapter for MongoDB.
 
 See <http://blog.datagraph.org/2010/04/rdf-repository-howto> for an overview.
 
-## Versioning and backwards compatibility.
+## Versioning and backwards compatibility
 
 Moving forward, the versioning will reflect the RDF.rb version number for which all rdf-specs are passing.
 
