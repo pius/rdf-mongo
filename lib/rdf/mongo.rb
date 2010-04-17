@@ -115,12 +115,23 @@ module RDF
           when Array
             query(RDF::Statement.new(*pattern))
           when Hash
+            
             statements = query_hash(pattern)
+            the_statements = statements || []            
             case block_given?
               when true
-                statements.each {|s| block.call(RDF::Statement.from_mongo(s))}
+                the_statements.each {|s| block.call(RDF::Statement.from_mongo(s))}
               else
-                statements.extend(RDF::Enumerable, RDF::Queryable)
+                #e = enumerator!.new(statements.extend(RDF::Queryable),:rdf_each)
+                s = the_statements.extend(RDF::Enumerable, RDF::Queryable)
+                def the_statements.each(&block)
+                  if block_given?
+                    super {|statement| block.call(RDF::Statement.from_mongo(statement)) }
+                  else
+                    enumerator!.new(the_statements,:rdf_each)
+                  end
+                end
+                s
             end
           else
             super(pattern) 
@@ -133,7 +144,7 @@ module RDF
         (h[:p] = hash[:predicate]) if hash[:predicate]
         (h[:o] = hash[:object]) if hash[:object]
         (h[:c] = hash[:context]) if hash[:context]
-        @coll.find(h)
+        @coll.find(h) || []
       end
       
       
