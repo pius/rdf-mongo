@@ -15,20 +15,14 @@ It should also be noted that prior to 1.0, there are no guarantees of backwards 
 You'll need the 'mongo', 'rdf', 'rdf-spec', and 'rspec' libraries.  The easiest way to install these is via RubyGems.
 
     $ sudo gem install mongo rdf rdf-spec rspec rdf-mongo
-
-## Ruby 1.9 Compatibility
-
-Please note that you'll need to use my forks of rdf and rdf-spec for Ruby 1.9 compatibility until my patches are pushed into the mainline (which'll hopefully happen within a few days).  To use them, uninstall the legacy rdf and rdf-spec gems and install the compatibility gems:
-
-    $ sudo gem install rdf-ruby19 rdf-spec-ruby19
-
+    
 
 ### Support
 
 Please post questions or feedback to the [W3C-ruby-rdf mailing list][].
 
 ### Authors
- * Pius Uzamere | <pius@alum.mit.edu> | <http://github.com/pius> | <http://pius.me>
+ * [Pius Uzamere][] | <pius@alum.mit.edu> | <http://github.com/pius> | <http://pius.me>
 
 ### Thank you
 
@@ -39,3 +33,4 @@ Please post questions or feedback to the [W3C-ruby-rdf mailing list][].
 MIT License
 
 [W3C-ruby-rdf mailing list]:        http://lists.w3.org/Archives/Public/public-rdf-ruby/
+[Pius Uzamere]: http://pius.me
