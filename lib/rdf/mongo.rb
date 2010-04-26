@@ -74,6 +74,24 @@ module RDF
     
     class Repository < ::RDF::Repository
       
+      def self.load(filenames, options = {:host => 'localhost', :port => 27017, :db => 'quadb'}, &block)
+        self.new(options) do |repository|
+          [filenames].flatten.each do |filename|
+            repository.load(filename, options)
+          end
+
+          if block_given?
+            case block.arity
+              when 1 then block.call(repository)
+              else repository.instance_eval(&block)
+            end
+          end
+        end
+      end
+      
+      
+      
+      
       def db
         @db
       end
