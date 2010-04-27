@@ -103,6 +103,13 @@ module RDF
       def initialize(options = {:host => 'localhost', :port => 27017, :db => 'quadb'})
         @db = ::Mongo::Connection.new(options[:host], options[:port]).db(options[:db])
         @coll = @db['quads']
+        @coll.create_index("s")
+        @coll.create_index("p")
+        @coll.create_index("o")
+        @coll.create_index("c")
+        @coll.create_index([["s", ::Mongo::ASCENDING], ["p", ::Mongo::ASCENDING]])
+        @coll.create_index([["s", ::Mongo::ASCENDING], ["o", ::Mongo::ASCENDING]])
+        @coll.create_index([["p", ::Mongo::ASCENDING], ["o", ::Mongo::ASCENDING]])
       end
  
       # @see RDF::Enumerable#each.
