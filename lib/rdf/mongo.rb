@@ -8,7 +8,7 @@ module Mongo
       if block_given?
         each {|statement| block.call(RDF::Statement.from_mongo(statement)) }
       else
-        self#each {|statement| RDF::Statement.from_mongo(statement) }
+        self
       end
     end
   end
@@ -89,9 +89,6 @@ module RDF
         end
       end
       
-      
-      
-      
       def db
         @db
       end
@@ -120,7 +117,6 @@ module RDF
         else
           statements = @coll.find()
           enumerator!.new(statements,:rdf_each)
-          #nasty ... in Ruby 1.9, Enumerator doesn't exist under Enumerable
         end
       end
 
@@ -144,16 +140,13 @@ module RDF
             query(pattern.to_hash)
           when Array
             query(RDF::Statement.new(*pattern))
-          when Hash
-            
+          when Hash 
             statements = query_hash(pattern)
             the_statements = statements || []            
             case block_given?
               when true
                 the_statements.each {|s| block.call(RDF::Statement.from_mongo(s))}
               else
-                #e = enumerator!.new(statements.extend(RDF::Queryable),:rdf_each)
-                #s = the_statements.extend(RDF::Enumerable, RDF::Queryable)
                 def the_statements.each(&block)
                   if block_given?
                     super {|statement| block.call(RDF::Statement.from_mongo(statement)) }
@@ -175,11 +168,6 @@ module RDF
       def query_hash(hash)
         return @coll.find if hash.empty?
         h = RDF::Statement.new(hash).to_mongo
-        # h = {}
-        # (h[:s] = hash[:subject]) if hash[:subject]
-        # (h[:p] = hash[:predicate]) if hash[:predicate]
-        # (h[:o] = hash[:object]) if hash[:object]
-        # (h[:c] = hash[:context]) if hash[:context]
         @coll.find(h)
       end
       
@@ -190,8 +178,6 @@ module RDF
           require 'enumerator' unless defined?(::Enumerable)
           @@enumerator_klass = defined?(::Enumerable::Enumerator) ? ::Enumerable::Enumerator : ::Enumerator
         end
-      
-      
     end
   end
 end
