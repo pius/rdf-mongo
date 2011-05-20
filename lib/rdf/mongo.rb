@@ -41,6 +41,8 @@ module RDF
           v, k = value.to_s, :u
         when RDF::Literal
           v, k, ll = value.value, :l, value.language
+        when RDF::Node
+          v, k = value.id.to_s, :n
         when nil
           v, k = nil, nil
         else
@@ -67,6 +69,8 @@ module RDF
           RDF::URI.new(value)
         when :l
           RDF::Literal.new(value, :language => lang)
+        when :n
+          RDF::Node.new(value)
         end
       end
     end
