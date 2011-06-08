@@ -125,13 +125,25 @@ module RDF
       end
 
       # @see RDF::Mutable#insert_statement
+      def supports?(feature)
+        case feature.to_sym
+          when :context then true
+          else false
+        end
+      end
+      
       def insert_statement(statement)
         @coll.update(statement.to_mongo, statement.to_mongo, :upsert => true)
       end
 
       # @see RDF::Mutable#delete_statement
       def delete_statement(statement)
-        @coll.remove(statement.to_mongo)
+        case statement.context
+        when nil
+          @coll.remove(statement.to_mongo.merge('ct'=>nil))
+        else
+          @coll.remove(statement.to_mongo)
+        end
       end
     
       def count
@@ -141,9 +153,9 @@ module RDF
       def query(pattern, &block)
         case pattern
           when RDF::Statement
-            query(pattern.to_hash)
+            query(pattern.to_hash, &block)
           when Array
-            query(RDF::Statement.new(*pattern))
+            query(RDF::Statement.new(*pattern), &block)
           when Hash 
             statements = query_hash(pattern)
             the_statements = statements || []            
@@ -162,7 +174,7 @@ module RDF
                 def the_statements.size
                   count
                 end
-                s = the_statements
+                s = the_statements.to_enum.extend(RDF::Enumerable, RDF::Queryable)
             end
           else
             super(pattern) 
