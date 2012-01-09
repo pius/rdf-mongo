@@ -17,9 +17,9 @@ end
 module RDF
   class Statement
     def to_mongo
-      self.to_hash.merge({:context => self.context}).inject({}) { |hash, (place_in_statement, entity)| 
+      self.to_hash.inject({}) do |hash, (place_in_statement, entity)| 
         hash.merge(RDF::Mongo::Conversion.to_mongo(entity, place_in_statement)) 
-        }
+      end
     end
     
     def self.from_mongo(statement)
@@ -40,14 +40,21 @@ module RDF
         when RDF::URI
           v, k = value.to_s, :u
         when RDF::Literal
-          v, k, ll = value.value, :l, value.language
+          if value.has_language?
+            v, k, ll = value.value, :ll, value.language.to_s
+          elsif value.has_datatype?
+            v, k, ll = value.value, :lt, value.datatype.to_s
+          else
+            v, k, ll = value.value, :l, nil
+          end
         when RDF::Node
           v, k = value.id.to_s, :n
-        when nil
+        when RDF::Query::Variable, Symbol, nil
           v, k = nil, nil
         else
           v, k = value.to_s, :u
         end
+        v = nil if v == ''
         
         case place_in_statement
         when :subject
@@ -59,49 +66,43 @@ module RDF
         when :context
           t, k1, lt = :ct, :c, :cl
         end
-        h = {k1 => (v == '' ? nil : v), t => (k == '' ? nil : k), lt => ll}
+        h = {k1 => v, t => k, lt => ll}
         h.delete_if {|k,v| h[k].nil?}
       end
 
-      def self.from_mongo(value, value_type = :u, lang = nil)
+      def self.from_mongo(value, value_type = :u, literal_extra = nil)
         case value_type
         when :u
-          RDF::URI.new(value)
+          RDF::URI.intern(value)
+        when :ll
+          RDF::Literal.new(value, :language => literal_extra.to_sym)
+        when :lt
+          RDF::Literal.new(value, :datatype => RDF::URI(literal_extra))
         when :l
-          RDF::Literal.new(value, :language => lang)
+          RDF::Literal.new(value)
         when :n
           RDF::Node.new(value)
         end
       end
     end
-    
-    
+
     class Repository < ::RDF::Repository
+      attr_reader :db
+      attr_reader :coll
       
-      def self.load(filenames, options = {:host => 'localhost', :port => 27017, :db => 'quadb'}, &block)
-        self.new(options) do |repository|
-          [filenames].flatten.each do |filename|
-            repository.load(filename, options)
-          end
-
-          if block_given?
-            case block.arity
-              when 1 then block.call(repository)
-              else repository.instance_eval(&block)
-            end
-          end
-        end
-      end
-      
-      def db
-        @db
-      end
-      
-      def coll
-        @coll
-      end
-
-      def initialize(options = {:host => 'localhost', :port => 27017, :db => 'quadb'})
+      ##
+      # Initializes this repository instance.
+      #
+      # @param  [Hash{Symbol => Object}] options
+      # @option options [URI, #to_s]    :uri (nil)
+      # @option options [String, #to_s] :title (nil)
+      # @option options [String] :host
+      # @option options [Integer] :port
+      # @option options [String] :db
+      # @yield  [repository]
+      # @yieldparam [Repository] repository
+      def initialize(options = {}, &block)
+        options = {:host => 'localhost', :port => 27017, :db => 'quadb'}.merge(options)
         @db = ::Mongo::Connection.new(options[:host], options[:port]).db(options[:db])
         @coll = @db['quads']
         @coll.create_index("s")
@@ -111,17 +112,7 @@ module RDF
         @coll.create_index([["s", ::Mongo::ASCENDING], ["p", ::Mongo::ASCENDING]])
         @coll.create_index([["s", ::Mongo::ASCENDING], ["o", ::Mongo::ASCENDING]])
         @coll.create_index([["p", ::Mongo::ASCENDING], ["o", ::Mongo::ASCENDING]])
-      end
- 
-      # @see RDF::Enumerable#each.
-      def each(&block)
-        if block_given?
-          statements = @coll.find()
-          statements.each {|statement| block.call(RDF::Statement.from_mongo(statement)) }
-        else
-          statements = @coll.find()
-          enumerator!.new(statements,:rdf_each)
-        end
+        super(options, &block)
       end
 
       # @see RDF::Mutable#insert_statement
@@ -133,7 +124,9 @@ module RDF
       end
       
       def insert_statement(statement)
-        @coll.update(statement.to_mongo, statement.to_mongo, :upsert => true)
+        st_mongo = statement.to_mongo
+        #puts "insert statement: #{st_mongo.inspect}"
+        @coll.update(st_mongo, st_mongo, :upsert => true)
       end
 
       # @see RDF::Mutable#delete_statement
@@ -145,49 +138,63 @@ module RDF
           @coll.remove(statement.to_mongo)
         end
       end
-    
+
+      ##
+      # @private
+      # @see RDF::Durable#durable?
+      def durable?; true; end
+
+      ##
+      # @private
+      # @see RDF::Countable#empty?
+      def empty?; @coll.count == 0; end
+
+      ##
+      # @private
+      # @see RDF::Countable#count
       def count
         @coll.count
       end
-    
-      def query(pattern, &block)
-        case pattern
-          when RDF::Statement
-            query(pattern.to_hash, &block)
-          when Array
-            query(RDF::Statement.new(*pattern), &block)
-          when Hash 
-            statements = query_hash(pattern)
-            the_statements = statements || []            
-            case block_given?
-              when true
-                the_statements.each {|s| block.call(RDF::Statement.from_mongo(s))}
-              else
-                def the_statements.each(&block)
-                  if block_given?
-                    super {|statement| block.call(RDF::Statement.from_mongo(statement)) }
-                  else
-                    enumerator!.new(the_statements,:rdf_each)
-                  end
-                end
-                
-                def the_statements.size
-                  count
-                end
-                s = the_statements.to_enum.extend(RDF::Enumerable, RDF::Queryable)
+
+      ##
+      # @private
+      # @see RDF::Enumerable#has_statement?
+      def has_statement?(statement)
+        !!@coll.find_one(statement.to_mongo)
+      end
+      ##
+      # @private
+      # @see RDF::Enumerable#each_statement
+      def each_statement(&block)
+        if block_given?
+          @coll.find() do |cursor|
+            cursor.each do |data|
+              block.call(RDF::Statement.from_mongo(data))
             end
-          else
-            super(pattern) 
+          end
+        end
+        enum_statement
+      end
+      alias_method :each, :each_statement
+
+      ##
+      # @private
+      # @see RDF::Enumerable#has_context?
+      def has_context?(value)
+        !!@coll.find_one(RDF::Mongo::Conversion.to_mongo(value, :context))
+      end
+
+      ##
+      # @private
+      # @see RDF::Queryable#query
+      def query_pattern(pattern, &block)
+        @coll.find(pattern.to_mongo) do |cursor|
+          cursor.each do |data|
+            block.call(RDF::Statement.from_mongo(data))
+          end
         end
       end
     
-      def query_hash(hash)
-        return @coll.find if hash.empty?
-        h = RDF::Statement.new(hash).to_mongo
-        @coll.find(h)
-      end
-      
-      
       private
 
         def enumerator! # @private
