@@ -2,18 +2,6 @@ require 'rdf'
 require 'enumerator'
 require 'mongo'
 
-module Mongo
-  class Cursor
-    def rdf_each(&block)
-      if block_given?
-        each {|statement| block.call(RDF::Statement.from_mongo(statement)) }
-      else
-        self
-      end
-    end
-  end
-end
-      
 module RDF
   class Statement
     def to_mongo
@@ -77,11 +65,12 @@ module RDF
         when :ll
           RDF::Literal.new(value, :language => literal_extra.to_sym)
         when :lt
-          RDF::Literal.new(value, :datatype => RDF::URI(literal_extra))
+          RDF::Literal.new(value, :datatype => RDF::URI.intern(literal_extra))
         when :l
           RDF::Literal.new(value)
         when :n
-          RDF::Node.new(value)
+          @nodes ||= {}
+          @nodes[value] ||= RDF::Node.new(value)
         end
       end
     end
@@ -166,6 +155,7 @@ module RDF
       # @private
       # @see RDF::Enumerable#each_statement
       def each_statement(&block)
+        @nodes = {} # reset cache. FIXME this should probably be in Node.intern
         if block_given?
           @coll.find() do |cursor|
             cursor.each do |data|
@@ -188,6 +178,7 @@ module RDF
       # @private
       # @see RDF::Queryable#query
       def query_pattern(pattern, &block)
+        @nodes = {} # reset cache. FIXME this should probably be in Node.intern
         @coll.find(pattern.to_mongo) do |cursor|
           cursor.each do |data|
             block.call(RDF::Statement.from_mongo(data))

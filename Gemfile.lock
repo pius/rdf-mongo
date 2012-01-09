@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rdf-mongo (0.1.9.1)
+    rdf-mongo (0.3.0)
       addressable (>= 2.2.6)
       mongo (>= 1.5.1)
       rdf (>= 0.3.4)
