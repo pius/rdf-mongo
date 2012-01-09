@@ -4,12 +4,21 @@ require 'mongo'
 
 module RDF
   class Statement
+    ##
+    # Creates a BSON representation of the statement.
+    # @return [Hash]
     def to_mongo
       self.to_hash.inject({}) do |hash, (place_in_statement, entity)| 
         hash.merge(RDF::Mongo::Conversion.to_mongo(entity, place_in_statement)) 
       end
     end
     
+    ##
+    # Create BSON for a statement representation. Note that if the statement has no context,
+    # a value of `false` will be used to indicate the default context
+    #
+    # @param [RDF::Statement] statement
+    # @return [Hash] Generated BSON representation of statement.
     def self.from_mongo(statement)
       RDF::Statement.new(
         :subject   => RDF::Mongo::Conversion.from_mongo(statement['s'], statement['st'], statement['sl']),
@@ -21,8 +30,16 @@ module RDF
   
   module Mongo    
     class Conversion
-      #TODO: Add support for other types of entities
-      
+      ##
+      # Translate an RDF::Value type to BSON key/value pairs.
+      #
+      # @param [RDF::Value, Symbol, false, nil] value
+      #   URI, BNode or Literal. May also be a Variable or Symbol to indicate
+      #   a pattern for a named context, or `false` to indicate the default context.
+      #   A value of `nil` indicates a pattern that matches any value.
+      # @param [:subject, :predicate, :object, :context]
+      #   Position within statement.
+      # @return [Hash] BSON representation of the statement
       def self.to_mongo(value, place_in_statement)
         case value
         when RDF::URI
@@ -37,7 +54,13 @@ module RDF
           end
         when RDF::Node
           v, k = value.id.to_s, :n
-        when RDF::Query::Variable, Symbol, nil
+        when RDF::Query::Variable, Symbol
+          # Returns anything other than the default context
+          v, k = nil, {"$ne" => :default}
+        when false
+          # Used for the default context
+          v, k = false, :default
+        when nil
           v, k = nil, nil
         else
           v, k = value.to_s, :u
@@ -58,6 +81,10 @@ module RDF
         h.delete_if {|k,v| h[k].nil?}
       end
 
+      ##
+      # Translate an BSON positional reference to an RDF Value.
+      #
+      # @return [RDF::Value]
       def self.from_mongo(value, value_type = :u, literal_extra = nil)
         case value_type
         when :u
@@ -71,6 +98,8 @@ module RDF
         when :n
           @nodes ||= {}
           @nodes[value] ||= RDF::Node.new(value)
+        when :default
+          nil # The default context returns as nil, although it's queried as false.
         end
       end
     end
@@ -114,6 +143,7 @@ module RDF
       
       def insert_statement(statement)
         st_mongo = statement.to_mongo
+        st_mongo[:ct] ||= :default # Indicate statement is in the default context
         #puts "insert statement: #{st_mongo.inspect}"
         @coll.update(st_mongo, st_mongo, :upsert => true)
       end
@@ -122,7 +152,7 @@ module RDF
       def delete_statement(statement)
         case statement.context
         when nil
-          @coll.remove(statement.to_mongo.merge('ct'=>nil))
+          @coll.remove(statement.to_mongo.merge('ct'=>:default))
         else
           @coll.remove(statement.to_mongo)
         end
@@ -177,9 +207,15 @@ module RDF
       ##
       # @private
       # @see RDF::Queryable#query
+      # @see RDF::Query::Pattern
       def query_pattern(pattern, &block)
         @nodes = {} # reset cache. FIXME this should probably be in Node.intern
-        @coll.find(pattern.to_mongo) do |cursor|
+
+        # A pattern context of `false` is used to indicate the default context
+        pm = pattern.to_mongo
+        pm.merge!(:c => nil, :ct => :default) if pattern.context == false
+        puts "query using #{pm.inspect}"
+        @coll.find(pm) do |cursor|
           cursor.each do |data|
             block.call(RDF::Statement.from_mongo(data))
           end
