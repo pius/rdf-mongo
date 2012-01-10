@@ -206,7 +206,7 @@ module RDF
 
       ##
       # @private
-      # @see RDF::Queryable#query
+      # @see RDF::Queryable#query_pattern
       # @see RDF::Query::Pattern
       def query_pattern(pattern, &block)
         @nodes = {} # reset cache. FIXME this should probably be in Node.intern
