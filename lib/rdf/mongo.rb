@@ -117,12 +117,13 @@ module RDF
       # @option options [String] :host
       # @option options [Integer] :port
       # @option options [String] :db
+      # @option options [String] :collection ('quads')
       # @yield  [repository]
       # @yieldparam [Repository] repository
       def initialize(options = {}, &block)
-        options = {:host => 'localhost', :port => 27017, :db => 'quadb'}.merge(options)
+        options = {:host => 'localhost', :port => 27017, :db => 'quadb', :collection => 'quads'}.merge(options)
         @db = ::Mongo::Connection.new(options[:host], options[:port]).db(options[:db])
-        @coll = @db['quads']
+        @coll = @db[options[:collection]]
         @coll.create_index("s")
         @coll.create_index("p")
         @coll.create_index("o")
